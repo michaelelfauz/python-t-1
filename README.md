@@ -1,0 +1,2 @@
+if username == admin fungsinya adalah cek login manual jika usernamenya adalah admin maka akan menampilkan teks html berikut (return) Login Berhasil Selamat datang admin!
+bisa diotak atik dengan database palsu (dict)
