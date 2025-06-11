@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for
+import datetime # Import modul datetime untuk timestamp
 
 # Mengimpor kelas Flask dari modul flask.
 # Flask: Kelas utama untuk membuat aplikasi web.
@@ -6,6 +7,7 @@ from flask import Flask, request, render_template, redirect, url_for
 # render_template: Fungsi untuk merender file template HTML (misalnya login.html, admin.html).
 # redirect: Fungsi untuk mengarahkan pengguna ke URL lain.
 # url_for: Fungsi untuk membangun URL untuk fungsi view tertentu, ini lebih baik daripada menulis URL secara manual karena otomatis menyesuaikan jika nama fungsi berubah.
+# datetime: Modul untuk bekerja dengan tanggal dan waktu, digunakan untuk menambahkan timestamp ke log.
 
 app = Flask(__name__)
 
@@ -17,13 +19,32 @@ app = Flask(__name__)
 # Ini adalah "database" sederhana kita berupa dictionary.
 # Di dunia nyata, kamu akan menggunakan database seperti PostgreSQL atau MySQL.
 USERS_DB = {
-    "admin": "admin_pass",       # Username: admin, Password: admin_pass
-    "user1": "user_pass",        # Username: user1, Password: user_pass
-    "guest": "guest_pass"        # Username: guest, Password: guest_pass
+    "admin": "1",       # Username: admin, Password: 1
+    "user1": "1",        # Username: user1, Password: 1
+    "guest": "1",        # Username: guest, Password: 1
+    "michael": "1"       #username: michael, password: 1
 }
 # Ini adalah dictionary Python yang berfungsi sebagai simulasi database pengguna.
 # Setiap kunci (key) adalah username, dan nilai (value) adalah password yang terkait.
 # Konsep: Dalam aplikasi nyata, kamu akan berinteraksi dengan database sungguhan (misal SQL) untuk menyimpan dan mengambil data pengguna.
+
+# Nama file untuk log percobaan login
+LOGIN_LOG_FILE = "login_attempts.txt"
+
+# Fungsi helper untuk menulis ke file log
+def log_login_attempt(username, status):
+    """
+    Mencatat percobaan login ke file log.
+    Ini adalah contoh PENCATATAN AKTIVITAS, BUKAN PENYIMPANAN KREDENSIAL.
+    """
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"[{timestamp}] User: {username}, Status: {status}\n"
+    try:
+        with open(LOGIN_LOG_FILE, "a") as f: # "a" berarti append (menambahkan ke akhir file)
+            f.write(log_entry)
+        print(f"Logged: {log_entry.strip()}") # Cetak juga ke konsol untuk debugging
+    except IOError as e:
+        print(f"Error writing to log file {LOGIN_LOG_FILE}: {e}")
 
 # ----------------------------------
 
@@ -65,11 +86,8 @@ def process_login():
 
     # Memeriksa kredensial pengguna di USERS_DB
     if username in USERS_DB and USERS_DB[username] == password:
-    # Memeriksa apakah `username` ada sebagai kunci di `USERS_DB`.
-    # Dan juga memeriksa apakah password yang dimasukkan cocok dengan password yang tersimpan di `USERS_DB` untuk username tersebut.
-    # Konsep: Logika otentikasi sederhana.
-
         # Jika login berhasil:
+        log_login_attempt(username, "SUCCESS") # Catat login berhasil
         if username == "admin":
             # Jika user adalah 'admin', arahkan ke halaman admin
             return redirect(url_for("admin_dashboard"))
@@ -86,6 +104,7 @@ def process_login():
             # Konsep: Dynamic URL berdasarkan data yang relevan.
     else:
         # Jika login gagal, arahkan kembali ke halaman login
+        log_login_attempt(username, "FAILED") # Catat login gagal
         # dan sertakan pesan error melalui query parameter di URL
         return redirect(url_for("show_login_form", error="Username atau Password salah."))
         # Mengarahkan kembali ke fungsi `show_login_form` (URL "/")
